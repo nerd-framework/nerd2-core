@@ -4,13 +4,23 @@ namespace Nerd2\Core;
 
 class Context
 {
-    public $request;
-    public $response;
-    public $services = [];
-    public $state = [];
+    use \Nerd2\Core\Utils\AutoGetterSetter;
 
-    public function __construct(Request $request) {
+    protected static $_autoGetters = ['request', 'response', 'app', 'services', 'state'];
+
+    private $request;
+    private $response;
+    private $app;
+    private $services;
+    private $state;
+
+    public function __construct(Request $request, Nerd $app)
+    {
         $this->request = $request;
-        $this->response = Response::empty();
+        $this->response = new Response();
+        $this->app = $app;
+
+        $this->services = [];
+        $this->state = [];
     }
 }

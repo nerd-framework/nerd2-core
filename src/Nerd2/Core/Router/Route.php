@@ -4,28 +4,41 @@ namespace Nerd2\Core\Router;
 
 use \Closure;
 use \Nerd2\Core\Context;
+use function \Nerd2\Core\makeCascade;
 
 class Route
 {
     private $routeRegexp;
     private $action;
 
-    public function __construct(string $route, \Closure $action)
+    public function __construct(string $route, \Closure ...$actions)
     {
+        $this->checkRoute($route);
+
         $escapedRoute = $this->escapeSpecialSymbols($route);
         $convertedRoute = $this->convertParameters($escapedRoute);
         
         $this->routeRegexp = "~^$convertedRoute$~";
-        $this->callback = $action;
+        $this->callback = makeCascade($actions);
+    }
+
+    private function checkRoute(string $route): void
+    {
+        if (strlen($route) === 0) {
+            throw new \Exception("Unexpected empty route");
+        }
+
+        if ($route[0] !== '/') {
+            throw new \Exception("Routes must be prefixed by \"/\"");
+        }
     }
 
     public function __invoke(Context $context, Closure $next): void
     {
-        if (preg_match($this->routeRegexp, $context->request->path, $match)) {
+        if (preg_match($this->routeRegexp, $context->getRequest()->getPath(), $match)) {
             $params = $this->filterArgs(array_slice($match, 1));
-            $newContext = clone $context;
-            $newContext->request->params = $params;
-            call_user_func($this->callback, $newContext);
+            $context->getRequest()->setParams($params);
+            call_user_func($this->callback, $context, $next);
             return;
         }
     

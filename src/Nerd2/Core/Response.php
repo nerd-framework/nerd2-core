@@ -6,37 +6,34 @@ use \Nerd2\Core\Client;
 
 class Response
 {
-    private const DEFAULT_STATUS = 200;
-    private const DEFAULT_THROW_STATUS = 500;
-    private const DEFAULT_CONTENT_TYPE = 'text/plain';
+    use \Nerd2\Core\Utils\AutoGetterSetter;
 
-    public $status;
-    public $body;
-    public $cookies;
-    public $headers;
+    protected static $_autoGetters = ['responseCode', 'headers', 'cookies'];
+    protected static $_autoSetters = ['responseCode', 'body'];
 
-    public function __construct($body = '', int $status = self::DEFAULT_STATUS)
-    {
-        $this->status = $status;
-        $this->body = $body;
-        $this->cookies = [];
-        $this->headers = [];
-    }
+    private const DEFAULT_RESPONSE_CODE = 200;
 
-    public function send(Client $client): void
+    private $responseCode = self::DEFAULT_RESPONSE_CODE;
+    private $headers = [];
+    private $cookies = [];
+    private $body = '';
+
+    public function sendTo(Backend $backend): void
     {
         $this->normalizeHeaders();
         $this->prepareResponse();
 
-        $client->sendStatus($this->status);
-        $client->sendHeaders($this->headers);
-        $client->sendCookies($this->cookies);
-        $client->sendBody($this->body);
-    }
+        $backend->sendResponseCode($this->responseCode);
 
-    public function throw(int $status = self::DEFAULT_THROW_STATUS, $body = null): void
-    {
-        throw new ApplicationException($status, $body);
+        foreach ($this->headers as $name => $value) {
+            $backend->sendHeader($name, $value);
+        }
+
+        foreach ($this->cookies as $name => $value) {
+            $backend->sendCookie($name, $value);
+        }
+
+        $backend->sendBody($this->body);
     }
 
     private function prepareResponse(): void
@@ -60,13 +57,8 @@ class Response
         return implode('-', array_map('ucfirst', explode('-', $header)));
     }
 
-    public function hasHeader($header): bool
+    public function hasHeader($name): bool
     {
-        return array_key_exists($header, $this->headers);
-    }
-
-    static public function empty(): self
-    {
-        return new self();
+        return array_key_exists($name, $this->headers);
     }
 }

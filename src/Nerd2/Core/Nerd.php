@@ -8,51 +8,34 @@ class Nerd
 {
     private $middleware = [];
 
-    public function use(callable $middleware)
+    public function use(callable $middleware): void
     {
         $this->middleware[] = $middleware;
     }
 
-    public function run(Request $request)
+    public function handle(Request $request, Backend $backend): void
     {
-        $context = new Context($request);
+        $context = new Context($request, $this);
+
         $this->runMiddleware($context);
-        $this->sendToClient($context);
+        $this->sendToClient($context, $backend);
     }
 
     private function runMiddleware(Context $context): void
     {
-        $initialMiddleware = function () use ($context) {
-            $context->response->status = 404;
+        $defaultMiddleware = function () use ($context) {
+            $context->response->responseCode = 404;
             $context->response->body = 'Not found';
         };
 
-        $errorMiddleware = function (Context $context, Closure $next): void
-        {
-            try {
-                $next();
-            } catch (ApplicationException $e) {
-                $context->response->status = $e->status;
-                $context->response->body = $e->body;
-            } catch (\Exception $e) {
-                $context->response->status = 500;
-                $context->response->body = (string) $e;
-            }
-        };
+        $middleware = $this->middleware;
 
-        $middleware = array_merge($this->middleware, [$errorMiddleware]);
-
-        $cascade = array_reduce($middleware, function ($next, $prev) use ($context) {
-            return function () use ($next, $prev, $context) {
-                $prev($context, $next);
-            };
-        }, $initialMiddleware);
-
-        $cascade();
+        $cascade = makeCascade($middleware);
+        $cascade($context, $defaultMiddleware);
     }
 
-    private function sendToClient(Context $context)
+    private function sendToClient(Context $context, Backend $backend): void
     {
-        $context->response->send(Client::current());
+        $context->response->sendTo($backend);
     }
 }

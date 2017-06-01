@@ -11,6 +11,9 @@
     "minimum-stability": "dev",
     "require": {},
     "autoload": {
+        "files": [
+            "src/Nerd2/Core/helper.php"
+        ],
         "psr-4": {
             "": "src/"
         }

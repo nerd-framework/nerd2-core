@@ -3,22 +3,39 @@
 use \Nerd2\Core\Nerd;
 use \Nerd2\Core\Request;
 use \Nerd2\Core\Router\Route;
+use \Nerd2\Core\Backend;
 
 require_once('vendor/autoload.php');
 
 $app = new Nerd();
 
-$app->use(new Route('/', function ($ctx) {
-    $ctx->response->body = 'Home';
-}));
+$request = Request::capture();
+$backend = new class implements Backend
+{
+    public function isHeadersSent(): bool
+    {
+        return headers_sent();
+    }
 
-$app->use(new Route('/hello/:name', function ($ctx) {
-    $name = $ctx->request->params['name'];
-    $ctx->response->body = "Hello, ${name}!";
-}));
+    public function sendHeader(string $name, string $value): void
+    {
+        header("$name: $value");
+    }
 
-$app->use(new Route('/error', function ($ctx) {
-    $ctx->response->throw(400, 'Oops!');
-}));
+    public function sendCookie(string $name, string $value): void
+    {
+        setcookie($name, $value);
+    }
 
-$app->run(Request::capture());
+    public function sendResponseCode(int $responseCode): void
+    {
+        http_response_code($responseCode);
+    }
+
+    public function sendBody($body): void
+    {
+        echo $body;
+    }
+};
+
+$app->handle($request, $backend);
