@@ -35,9 +35,9 @@ class Route
 
     public function __invoke(Context $context, Closure $next): void
     {
-        if (preg_match($this->routeRegexp, $context->getRequest()->getPath(), $match)) {
+        if (preg_match($this->routeRegexp, $context->request->path, $match)) {
             $params = $this->filterArgs(array_slice($match, 1));
-            $context->getRequest()->setParams($params);
+            $context->request->mergeParams($params);
             call_user_func($this->callback, $context, $next);
             return;
         }
@@ -63,10 +63,6 @@ class Route
 
     private function filterArgs(array $args): array
     {
-        $isNumeric = array_reduce(array_keys($args), function ($acc, $item) {
-            return $acc && is_int($item);
-        }, true);
-        $filter = $isNumeric ? "is_int" : "is_string";
-        return array_filter($args, $filter, ARRAY_FILTER_USE_KEY);
+        return array_filter($args, "is_string", ARRAY_FILTER_USE_KEY);
     }
 }

@@ -38,7 +38,11 @@ trait AutoGetterSetter
 
     private static function makeAttributeError($name): \Exception
     {
-        return new \RuntimeException(sprintf('Attribute "%s::%s" not present or inaccessible', static::class, $name));
+        return new \RuntimeException(sprintf(
+            'Attribute "%s::%s" is not present, inaccessible, have no getter or is not in the $_autoGetters list',
+            static::class,
+            $name
+        ));
     }
 
     private static function toGetter(string $name): string

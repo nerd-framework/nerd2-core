@@ -38,8 +38,17 @@ $backend = new class implements Backend
     }
 };
 
-$app->use(function ($context, $next) {
+$app->use(new Route('/', function ($context, $next) {
+    $context->response->body = 'Home';
+}));
+
+$app->use(new Route('/greet/:name', function ($context, $next) {
+    $name = $context->request->params['name'];
+    $context->response->body = "Hello, {$name}!";
+}));
+
+$app->use(new Route('/error', function ($context, $next) {
     throw new \RuntimeException('Runtime exception!');
-});
+}));
 
 $app->handle($request, $backend);
