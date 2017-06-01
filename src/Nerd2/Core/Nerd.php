@@ -17,7 +17,13 @@ class Nerd
     {
         $context = new Context($request, $this);
 
-        $this->runMiddleware($context);
+        try {
+            $this->runMiddleware($context);
+        } catch (\Exception $e) {
+            $context->response->responseCode = 500;
+            error_log($e);
+        }
+
         $this->sendToClient($context, $backend);
     }
 
@@ -25,7 +31,6 @@ class Nerd
     {
         $defaultMiddleware = function () use ($context) {
             $context->response->responseCode = 404;
-            $context->response->body = 'Not found';
         };
 
         $middleware = $this->middleware;

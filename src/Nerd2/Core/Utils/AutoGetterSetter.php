@@ -16,7 +16,7 @@ trait AutoGetterSetter
             return $this->$getter();
         }
 
-        throw new \RuntimeException("Attribute ($name) doesn't exist or inaccessible");
+        throw $this->makeAttributeError($name);
     }
 
     public function __set($name, $value)
@@ -33,7 +33,12 @@ trait AutoGetterSetter
             return;
         }
 
-        throw new \RuntimeException("Attribute ($name) doesn't exist or inaccessible");
+        throw $this->makeAttributeError($name);
+    }
+
+    private static function makeAttributeError($name): \Exception
+    {
+        return new \RuntimeException(sprintf('Attribute "%s::%s" not present or inaccessible', static::class, $name));
     }
 
     private static function toGetter(string $name): string

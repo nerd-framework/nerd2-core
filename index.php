@@ -38,4 +38,8 @@ $backend = new class implements Backend
     }
 };
 
+$app->use(function ($context, $next) {
+    throw new \RuntimeException('Runtime exception!');
+});
+
 $app->handle($request, $backend);
