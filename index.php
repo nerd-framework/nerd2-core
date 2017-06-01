@@ -12,8 +12,13 @@ $app->use(new Route('/', function ($ctx) {
     $ctx->response->body = 'Home';
 }));
 
-$app->use(new Route('/hello', function ($ctx) {
-    $ctx->response->body = 'Hello, World!';
+$app->use(new Route('/hello/:name', function ($ctx) {
+    $name = $ctx->request->params['name'];
+    $ctx->response->body = "Hello, ${name}!";
+}));
+
+$app->use(new Route('/error', function ($ctx) {
+    $ctx->response->throw(400, 'Oops!');
 }));
 
 $app->run(Request::capture());

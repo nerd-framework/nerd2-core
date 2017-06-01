@@ -6,19 +6,22 @@ class Request
 {
     public $method;
     public $path;
-    public $params;
+    public $query;
     public $headers;
+    public $params;
 
     public function __construct(
         string $method = 'GET', 
         string $path = '/', 
-        array $params = [],
+        array $query = [],
         array $headers = []
     ) {
         $this->method = $method;
         $this->path = $path;
-        $this->params = $params;
+        $this->query = $query;
         $this->headers = $headers;
+
+        $this->params = [];
     }
 
     public static function capture()

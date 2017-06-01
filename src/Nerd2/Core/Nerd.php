@@ -27,7 +27,22 @@ class Nerd
             $context->response->body = 'Not found';
         };
 
-        $cascade = array_reduce(array_reverse($this->middleware), function ($next, $prev) use ($context) {
+        $errorMiddleware = function (Context $context, Closure $next): void
+        {
+            try {
+                $next();
+            } catch (ApplicationException $e) {
+                $context->response->status = $e->status;
+                $context->response->body = $e->body;
+            } catch (\Exception $e) {
+                $context->response->status = 500;
+                $context->response->body = (string) $e;
+            }
+        };
+
+        $middleware = array_merge($this->middleware, [$errorMiddleware]);
+
+        $cascade = array_reduce($middleware, function ($next, $prev) use ($context) {
             return function () use ($next, $prev, $context) {
                 $prev($context, $next);
             };
