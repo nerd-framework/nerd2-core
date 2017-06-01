@@ -1,0 +1,18 @@
+{
+    "name": "nerd2/core",
+    "description": "Web Framework based on principle of middleware",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Roman Lakhtadyr",
+            "email": "roman.lakhtadyr@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "": "src/"
+        }
+    }
+}
