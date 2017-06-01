@@ -8,7 +8,7 @@ class Nerd
 {
     private $middleware = [];
 
-    public function use(Closure $middleware)
+    public function use(callable $middleware)
     {
         $this->middleware[] = $middleware;
     }
