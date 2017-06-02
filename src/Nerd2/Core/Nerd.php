@@ -11,6 +11,18 @@ class Nerd
 {
     private $middleware = [];
 
+    public static function init(Closure $init): void
+    {
+        $request = Request::capture();
+        $backend = BrowserBackend::getInstance();
+
+        $app = new self();
+
+        $init($app);
+
+        $app->handle($request, $backend);
+    }
+
     public function use(callable $middleware): void
     {
         $this->middleware[] = $middleware;

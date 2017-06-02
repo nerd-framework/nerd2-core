@@ -7,30 +7,26 @@ use \Nerd2\Core\BrowserBackend;
 
 require_once('vendor/autoload.php');
 
-$app = new Nerd();
+Nerd::init(function (Nerd $app)
+{
+    $app->use(Route::get('/', function ($context, $next) {
+        $context->response->body = 'Home';
+    }));
 
-$request = Request::capture();
-$backend = BrowserBackend::getInstance();
+    $app->use(Route::get('/greet/:name', function ($context) {
+        $name = $context->request->params['name'];
+        $context->response->body = "Hello, {$name}!";
+    }));
 
-$app->use(Route::get('/', function ($context, $next) {
-    $context->response->body = 'Home';
-}));
+    $app->use(Route::get('/error', function ($context) {
+        throw new \RuntimeException('Runtime exception!');
+    }));
 
-$app->use(Route::get('/greet/:name', function ($context) {
-    $name = $context->request->params['name'];
-    $context->response->body = "Hello, {$name}!";
-}));
+    $app->use(Route::get('/redir', function ($context) {
+        $context->response->redirect = '/greet/You';
+    }));
 
-$app->use(Route::get('/error', function ($context) {
-    throw new \RuntimeException('Runtime exception!');
-}));
-
-$app->use(Route::get('/redir', function ($context) {
-    $context->response->redirect = '/greet/You';
-}));
-
-$app->use(Route::any('/echo', function ($context) {
-    $context->response->body = $context->request;
-}));
-
-$app->handle($request, $backend);
+    $app->use(Route::any('/echo', function ($context) {
+        $context->response->body = $context->request;
+    }));
+});
