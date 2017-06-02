@@ -113,8 +113,9 @@ class Response
     {
         if ($this->isJsonBody()) {
             $backend->sendBody(json_encode($this->body));
+        } else {
+            $backend->sendBody($this->body);
         }
-        $backend->sendBody($this->body);
     }
 
     private function isJsonBody(): bool
