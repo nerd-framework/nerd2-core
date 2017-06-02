@@ -22,29 +22,34 @@ class Router
         return "{$this->routerPrefix}{$route}";
     }
 
-    public function get(string $route, Closure ...$actions): void
+    public function get(string $route, Closure ...$actions): Router
     {
         array_push($this->routes, Route::get($this->normalize($route), ...$actions));
+        return $this;
     }
 
-    public function post(string $route, Closure ...$actions): void
+    public function post(string $route, Closure ...$actions): Router
     {
         array_push($this->routes, Route::post($this->normalize($route), ...$actions));
+        return $this;
     }
 
-    public function put(string $route, Closure ...$actions): void
+    public function put(string $route, Closure ...$actions): Router
     {
         array_push($this->routes, Route::put($this->normalize($route), ...$actions));
+        return $this;
     }
 
-    public function delete(string $route, Closure ...$actions): void
+    public function delete(string $route, Closure ...$actions): Router
     {
         array_push($this->routes, Route::delete($this->normalize($route), ...$actions));
+        return $this;
     }
     
-    public function any(string $route, Closure ...$actions): void
+    public function any(string $route, Closure ...$actions): Router
     {
         array_push($this->routes, Route::any($this->normalize($route), ...$actions));
+        return $this;
     }
 
     public function __invoke(Context $context, Closure $next): void

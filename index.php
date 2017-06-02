@@ -10,55 +10,58 @@ require_once('vendor/autoload.php');
 
 Nerd::init(function (Nerd $app)
 {
-    $router = new Router();
+    $app->use( 
+        
+        (new Router())
 
-    $router->get('/', function ($context, $next) {
-        $context->response->body = 'Home';
-    });
+            ->get('/', function ($context, $next) {
+                $context->response->body = 'Home';
+            })
 
-    $router->get('/greet/:name', function ($context) {
-        $name = $context->request->params['name'];
-        $context->response->body = "Hello, {$name}!";
-    });
+            ->get('/greet/:name', function ($context) {
+                $name = $context->request->params['name'];
+                $context->response->body = "Hello, {$name}!";
+            })
 
-    $router->get('/error', function ($context) {
-        throw new \RuntimeException('Runtime exception!');
-    });
+            ->get('/error', function ($context) {
+                throw new \RuntimeException('Runtime exception!');
+            })
 
-    $router->get('/redir', function ($context) {
-        $context->response->redirect = '/greet/You';
-    });
+            ->get('/redir', function ($context) {
+                $context->response->redirect = '/greet/You';
+            })
 
-    $router->any('/echo', function ($context) {
-        $context->response->body = $context->request;
-    });
+            ->any('/echo', function ($context) {
+                $context->response->body = $context->request;
+            })
+    );
 
-    $app->use($router);
+    $app->use(
 
-    $userRouter = new Router('/users');
+        (new Router('/users'))
 
-    $userRouter->get('/', function ($context) {
-        $context->response->body = 'Users List';
-    });
+            ->get('/', function ($context) {
+                $context->response->body = 'Users List';
+            })
 
-    $userRouter->get('/:id', function ($context) {
-        $id = $context->request->params['id'];
-        $context->response->body = 'Get User ' . $id;
-    });
+            ->get('/:id', function ($context) {
+                $id = $context->request->params['id'];
+                $context->response->body = 'Get User ' . $id;
+            })
 
-    $userRouter->post('/', function ($context) {
-        $context->response->body = 'New User';
-    });
+            ->post('/', function ($context) {
+                $context->response->body = 'New User';
+            })
 
-    $userRouter->put('/:id', function ($context) {
-        $id = $context->request->params['id'];
-        $context->response->body = 'Update User ' . $id;
-    });
+            ->put('/:id', function ($context) {
+                $id = $context->request->params['id'];
+                $context->response->body = 'Update User ' . $id;
+            })
 
-    $userRouter->delete('/:id', function ($context) {
-        $id = $context->request->params['id'];
-        $context->response->body = 'Delete User ' . $id;
-    });
+            ->delete('/:id', function ($context) {
+                $id = $context->request->params['id'];
+                $context->response->body = 'Delete User ' . $id;
+            })
 
-    $app->use($userRouter);
+    );
 });
