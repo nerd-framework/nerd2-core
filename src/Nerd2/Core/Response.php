@@ -107,7 +107,7 @@ class Response
     private function prepareResponse(): void
     {
         if (!is_null($this->redirect)) {
-            $this->responseCode = REDIRECT_RESPONSE_CODE;
+            $this->responseCode = self::REDIRECT_RESPONSE_CODE;
             $this->headers['Location'] = $this->redirect;
         }
 

@@ -16,13 +16,17 @@ $app->use(new Route('/', function ($context, $next) {
     $context->response->body = 'Home';
 }));
 
-$app->use(new Route('/greet/:name', function ($context, $next) {
+$app->use(new Route('/greet/:name', function ($context) {
     $name = $context->request->params['name'];
     $context->response->body = "Hello, {$name}!";
 }));
 
-$app->use(new Route('/error', function ($context, $next) {
+$app->use(new Route('/error', function ($context) {
     throw new \RuntimeException('Runtime exception!');
+}));
+
+$app->use(new Route('/redir', function ($context) {
+    $context->response->redirect = '/greet/You';
 }));
 
 $app->handle($request, $backend);
