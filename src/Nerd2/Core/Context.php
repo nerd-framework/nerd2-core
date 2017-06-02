@@ -17,7 +17,7 @@ class Context
     public function __construct(Request $request, Nerd $app)
     {
         $this->request = $request;
-        $this->response = new Response();
+        $this->response = new Response($this);
         $this->app = $app;
 
         $this->services = [];

@@ -2,8 +2,6 @@
 
 namespace Nerd2\Core;
 
-use \Nerd2\Core\Client;
-
 class Response
 {
     use \Nerd2\Core\Utils\AutoGetterSetter;
@@ -19,6 +17,13 @@ class Response
     private $cookies = [];
     private $body = '';
     private $redirect = null;
+
+    private $context;
+
+    public function __construct(Context $context)
+    {
+        $this->context = $context;
+    }
 
     private $responseCodes = [
         // 1xx: Informational - Request received, continuing process
@@ -101,17 +106,34 @@ class Response
             $backend->sendCookie($name, $value);
         }
 
+        $this->sendBody($backend);
+    }
+
+    private function sendBody(Backend $backend): void
+    {
+        if ($this->isJsonBody()) {
+            $backend->sendBody(json_encode($this->body));
+        }
         $backend->sendBody($this->body);
+    }
+
+    private function isJsonBody(): bool
+    {
+        return is_array($this->body) || $this->body instanceof \JsonSerializable;
     }
 
     private function prepareResponse(): void
     {
+        if ($this->context->request->method === 'HEAD') {
+            $this->body = '';
+        }
+
         if (!is_null($this->redirect)) {
             $this->responseCode = self::REDIRECT_RESPONSE_CODE;
             $this->headers['Location'] = $this->redirect;
         }
 
-        if (is_array($this->body) && !isset($this->headers['Content-Type'])) {
+        if ($this->isJsonBody() && !isset($this->headers['Content-Type'])) {
             $this->headers['Content-Type'] = 'application/json';
         }
 

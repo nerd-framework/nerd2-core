@@ -10,9 +10,10 @@ use function \Nerd2\Core\makeCascade;
 class Route
 {
     private $routeRegexp;
+    private $methods;
     private $action;
 
-    public function __construct(string $route, \Closure ...$actions)
+    public function __construct(array $methods, string $route, \Closure ...$actions)
     {
         $this->checkRoute($route);
 
@@ -20,6 +21,7 @@ class Route
         $convertedRoute = $this->convertParameters($escapedRoute);
         
         $this->routeRegexp = "~^$convertedRoute$~";
+        $this->methods = $methods;
         $this->callback = makeCascade($actions);
     }
 
@@ -36,14 +38,20 @@ class Route
 
     public function __invoke(Context $context, Closure $next): void
     {
-        if (preg_match($this->routeRegexp, $context->request->path, $match)) {
-            $params = $this->filterArgs(array_slice($match, 1));
-            $context->request->mergeParams($params);
-            call_user_func($this->callback, $context, $next);
+        if (!empty($this->methods) && !in_array($context->request->method, $this->methods)) {
+            $next();
+            return;
+        }
+
+        if (!preg_match($this->routeRegexp, $context->request->path, $match)) {
+            $next();
             return;
         }
     
-        $next();
+        $params = $this->filterArgs(array_slice($match, 1));
+        $context->request->mergeParams($params);
+
+        call_user_func($this->callback, $context, $next);
     }
 
     private function escapeSpecialSymbols(string $route): string
@@ -65,5 +73,30 @@ class Route
     private function filterArgs(array $args): array
     {
         return array_filter($args, "is_string", ARRAY_FILTER_USE_KEY);
+    }
+
+    public static function get(string $route, Closure $action): Route
+    {
+        return new self(['HEAD', 'GET'], $route, $action);
+    }
+
+    public static function post(string $route, Closure $action): Route
+    {
+        return new self(['POST'], $route, $action);
+    }
+
+    public static function put(string $route, Closure $action): Route
+    {
+        return new self(['PUT'], $route, $action);
+    }
+    
+    public static function delete(string $route, Closure $action): Route
+    {
+        return new self(['DELETE'], $route, $action);
+    }
+
+    public static function any(string $route, Closure $action): Route
+    {
+        return new self([], $route, $action);
     }
 }

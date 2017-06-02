@@ -49,7 +49,9 @@ class Request implements \JsonSerializable
     {
         return [
             'method' => $this->method,
-            'path' => $this->path
+            'path' => $this->path,
+            'params' => $this->params,
+            'headers' => $this->headers,
         ];
     }
 }
