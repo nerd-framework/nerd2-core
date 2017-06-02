@@ -3,30 +3,35 @@
 use \Nerd2\Core\Nerd;
 use \Nerd2\Core\Request;
 use \Nerd2\Core\Router\Route;
+use \Nerd2\Core\Router\Router;
 use \Nerd2\Core\BrowserBackend;
 
 require_once('vendor/autoload.php');
 
 Nerd::init(function (Nerd $app)
 {
-    $app->use(Route::get('/', function ($context, $next) {
-        $context->response->body = 'Home';
-    }));
+    $router = new Router();
 
-    $app->use(Route::get('/greet/:name', function ($context) {
+    $router->get('/', function ($context, $next) {
+        $context->response->body = 'Home';
+    });
+
+    $router->get('/greet/:name', function ($context) {
         $name = $context->request->params['name'];
         $context->response->body = "Hello, {$name}!";
-    }));
+    });
 
-    $app->use(Route::get('/error', function ($context) {
+    $router->get('/error', function ($context) {
         throw new \RuntimeException('Runtime exception!');
-    }));
+    });
 
-    $app->use(Route::get('/redir', function ($context) {
+    $router->get('/redir', function ($context) {
         $context->response->redirect = '/greet/You';
-    }));
+    });
 
-    $app->use(Route::any('/echo', function ($context) {
+    $router->any('/echo', function ($context) {
         $context->response->body = $context->request;
-    }));
+    });
+
+    $app->use($router);
 });
