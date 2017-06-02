@@ -21,6 +21,11 @@ class BrowserBackend implements Backend
         return headers_sent();
     }
 
+    public function getHeadersList(): array
+    {
+        return headers_list();
+    }
+
     public function sendHeader(string $name, string $value): void
     {
         header("$name: $value");

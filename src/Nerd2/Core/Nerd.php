@@ -54,7 +54,19 @@ class Nerd
         $middleware = $this->middleware;
 
         $cascade = makeCascade($middleware);
-        $cascade($context, $defaultMiddleware);
+
+        $this->runSilently($cascade, $context, $defaultMiddleware);
+    }
+
+    private function runSilently(Closure $function, ...$args): void
+    {
+        ob_start();
+        $function(...$args);
+        $side = ob_get_clean();
+
+        if (strlen($side) > 0) {
+            throw new NerdException("Side-effect body output detected");
+        }
     }
 
     private function sendToClient(Context $context, Backend $backend): void

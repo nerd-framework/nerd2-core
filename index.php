@@ -21,7 +21,7 @@ Nerd::init(function (Nerd $app)
     });
 
     /* Routes are middleware too. ... */
-    $app->use(new Route('/single', function ($context, $next) {
+    $app->use(Route::get('/single', function ($context, $next) {
         $context->response->body = 'Hello from single route!';
     }));
 
@@ -114,4 +114,5 @@ Nerd::init(function (Nerd $app)
         }
 
     );
+
 });
