@@ -2,6 +2,8 @@
 
 namespace Nerd2\Core;
 
+use \Nerd2\Core\Exceptions\HttpException;
+
 class Context
 {
     use \Nerd2\Core\Utils\AutoGetterSetter;
@@ -22,5 +24,10 @@ class Context
 
         $this->services = [];
         $this->state = [];
+    }
+
+    public function throw(int $responseCode, $body = ''): void
+    {
+        throw new HttpException($responseCode, $body);
     }
 }
