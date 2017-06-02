@@ -20,9 +20,10 @@ class Route
         $escapedRoute = $this->escapeSpecialSymbols($route);
         $convertedRoute = $this->convertParameters($escapedRoute);
         
-        $this->routeRegexp = "~^$convertedRoute$~";
+        $this->routeRegexp = "~^$convertedRoute\/?$~";
+
         $this->methods = $methods;
-        $this->callback = makeCascade($actions);
+        $this->action = makeCascade($actions);
     }
 
     private function checkRoute(string $route): void
@@ -47,11 +48,11 @@ class Route
             $next();
             return;
         }
-    
+
         $params = $this->filterArgs(array_slice($match, 1));
         $context->request->mergeParams($params);
 
-        call_user_func($this->callback, $context, $next);
+        call_user_func($this->action, $context, $next);
     }
 
     private function escapeSpecialSymbols(string $route): string

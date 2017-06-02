@@ -8,31 +8,43 @@ use function \Nerd2\Core\makeCascade;
 
 class Router
 {
-    private $routes = [];
+    private $routes;
+    private $routerPrefix;
+
+    public function __construct(string $routerPrefix = '')
+    {
+        $this->routerPrefix = rtrim($routerPrefix, '/');
+        $this->routes = [];
+    }
+
+    private function normalize(string $route): string
+    {
+        return "{$this->routerPrefix}{$route}";
+    }
 
     public function get(string $route, Closure ...$actions): void
     {
-        array_push($this->routes, Route::get($route, ...$actions));
+        array_push($this->routes, Route::get($this->normalize($route), ...$actions));
     }
 
     public function post(string $route, Closure ...$actions): void
     {
-        array_push($this->routes, Route::post($route, ...$actions));
+        array_push($this->routes, Route::post($this->normalize($route), ...$actions));
     }
 
     public function put(string $route, Closure ...$actions): void
     {
-        array_push($this->routes, Route::put($route, ...$actions));
+        array_push($this->routes, Route::put($this->normalize($route), ...$actions));
     }
 
     public function delete(string $route, Closure ...$actions): void
     {
-        array_push($this->routes, Route::delete($route, ...$actions));
+        array_push($this->routes, Route::delete($this->normalize($route), ...$actions));
     }
     
     public function any(string $route, Closure ...$actions): void
     {
-        array_push($this->routes, Route::any($route, ...$actions));
+        array_push($this->routes, Route::any($this->normalize($route), ...$actions));
     }
 
     public function __invoke(Context $context, Closure $next): void
