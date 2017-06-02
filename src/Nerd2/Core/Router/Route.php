@@ -4,6 +4,7 @@ namespace Nerd2\Core\Router;
 
 use \Closure;
 use \Nerd2\Core\Context;
+use \Nerd2\Core\Exceptions\NerdException;
 use function \Nerd2\Core\makeCascade;
 
 class Route
@@ -25,11 +26,11 @@ class Route
     private function checkRoute(string $route): void
     {
         if (strlen($route) === 0) {
-            throw new \Exception("Unexpected empty route");
+            throw new NerdException("Unexpected empty route");
         }
 
         if ($route[0] !== '/') {
-            throw new \Exception("Routes must be prefixed by \"/\"");
+            throw new NerdException("Routes must be prefixed by \"/\"");
         }
     }
 

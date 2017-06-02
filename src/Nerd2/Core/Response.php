@@ -9,14 +9,16 @@ class Response
     use \Nerd2\Core\Utils\AutoGetterSetter;
 
     protected static $_autoGetters = ['responseCode', 'headers', 'cookies', 'responseCodes'];
-    protected static $_autoSetters = ['responseCode', 'body'];
+    protected static $_autoSetters = ['responseCode', 'body', 'redirect'];
 
     private const DEFAULT_RESPONSE_CODE = 200;
+    private const REDIRECT_RESPONSE_CODE = 302;
 
     private $responseCode = self::DEFAULT_RESPONSE_CODE;
     private $headers = [];
     private $cookies = [];
     private $body = '';
+    private $redirect = null;
 
     private $responseCodes = [
         // 1xx: Informational - Request received, continuing process
@@ -104,11 +106,16 @@ class Response
 
     private function prepareResponse(): void
     {
+        if (!is_null($this->redirect)) {
+            $this->responseCode = REDIRECT_RESPONSE_CODE;
+            $this->headers['Location'] = $this->redirect;
+        }
+
         if (is_array($this->body) && !isset($this->headers['Content-Type'])) {
             $this->headers['Content-Type'] = 'application/json';
         }
 
-        if ($this->responseCode >= 400 && empty($this->body)) {
+        if ($this->isErrorResponse() && $this->hasNoBody()) {
             $this->body = $this->responseCodes[$this->responseCode];
         }
     }
@@ -117,7 +124,10 @@ class Response
     {
         $keys = array_keys($this->headers);
         $this->headers = array_reduce($keys, function ($acc, $key) {
-            $acc[$this->normalizeHeader($key)] = $this->headers[$key];
+            $headerValue = $this->headers[$key];
+            $acc[$this->normalizeHeader($key)] = is_array($headerValue)
+                ? implode(';', $headerValue)
+                : $headerValue;
             return $acc;
         }, []);
     }
@@ -130,5 +140,20 @@ class Response
     public function hasHeader($name): bool
     {
         return array_key_exists($name, $this->headers);
+    }
+
+    public function hasNoBody(): bool
+    {
+        return empty($this->body);
+    }
+
+    public function isErrorResponse(): bool
+    {
+        return $this->responseCode >= 400;
+    }
+
+    public function isOkResponse(): bool
+    {
+        return ! $this->isErrorResponse();
     }
 }

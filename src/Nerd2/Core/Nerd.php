@@ -3,6 +3,9 @@
 namespace Nerd2\Core;
 
 use \Closure;
+use \Exception;
+use \Nerd2\Core\Exceptions\NerdException;
+use \Nerd2\Core\Exceptions\HttpException;
 
 class Nerd
 {
@@ -19,10 +22,13 @@ class Nerd
 
         try {
             $this->runMiddleware($context);
-        } catch (\Exception $e) {
+        } catch (HttpException $e) {
+            $context->response->responseCode = $e->responseCode;
+            $context->response->body = $e->body;
+        } catch (Exception | NerdException $e) {
             $context->response->responseCode = 500;
             error_log($e);
-        }
+        } 
 
         $this->sendToClient($context, $backend);
     }
