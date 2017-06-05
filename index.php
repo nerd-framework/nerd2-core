@@ -8,10 +8,18 @@ use \Nerd2\Core\Router\Router;
 use \Nerd2\Core\Router\CrudController;
 use \Nerd2\Core\BrowserBackend;
 
+use \Nerd2\Core\Middleware\PhpViewEngine;
+
 require_once('vendor/autoload.php');
 
-Nerd::init(function (Nerd $app)
-{
+Nerd::init(function (Nerd $app) {
+    /* Add template engine */
+    $app->use(new PhpViewEngine(__DIR__ . DIRECTORY_SEPARATOR . 'view'));
+
+    $app->use(Route::get('/template', function (Context $context) {
+        $context->response->render('index.php', ['foo' => 'Bar']);
+    }));
+
     /* Middleware example. This middleware calculates how long request was run and prints result to log. */
     $app->use(function (Context $context, Closure $next) {
         $begin = microtime(true);
@@ -26,7 +34,7 @@ Nerd::init(function (Nerd $app)
     }));
 
     /* Router is just cascade of routes. ... */
-    $app->use( 
+    $app->use(
         
         (new Router())
 
@@ -114,5 +122,4 @@ Nerd::init(function (Nerd $app)
         }
 
     );
-
 });

@@ -22,8 +22,8 @@ class Context
         $this->response = new Response($this);
         $this->app = $app;
 
-        $this->services = [];
-        $this->state = [];
+        $this->services = (object) [];
+        $this->state = (object) [];
     }
 
     public function throw(int $responseCode, $body = ''): void

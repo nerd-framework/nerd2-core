@@ -6,7 +6,7 @@ class Response
 {
     use \Nerd2\Core\Utils\AutoGetterSetter;
 
-    protected static $_autoGetters = ['responseCode', 'headers', 'cookies', 'responseCodes'];
+    protected static $_autoGetters = ['responseCode', 'headers', 'cookies', 'responseCodes', 'template'];
     protected static $_autoSetters = ['responseCode', 'body', 'redirect'];
 
     private const DEFAULT_RESPONSE_CODE = 200;
@@ -29,10 +29,10 @@ class Response
         // 1xx: Informational - Request received, continuing process
         100 => "Continue",                       // [RFC7231, Section 6.2.1]
         101 => "Switching Protocols",            // [RFC7231, Section 6.2.2]
-        102 => "Processing",                     // [RFC2518]     
+        102 => "Processing",                     // [RFC2518]
         // 2xx: Success - The action was successfully received, understood, and accepted
-        200 => "OK",                             // [RFC7231, Section 6.3.1]             
-        201 => "Created",                        // [RFC7231, Section 6.3.2]        
+        200 => "OK",                             // [RFC7231, Section 6.3.1]
+        201 => "Created",                        // [RFC7231, Section 6.3.2]
         202 => "Accepted",                       // [RFC7231, Section 6.3.3]
         203 => "Non-Authoritative Information",  // [RFC7231, Section 6.3.4]
         204 => "No Content",                     // [RFC7231, Section 6.3.5]
@@ -93,7 +93,7 @@ class Response
 
     public function render($template, array $args = []): void
     {
-        $this->body = ($this->context->services['render'])($template, $args);
+        $this->body = ($this->context->services->render)($template, $args);
     }
 
     public function sendTo(Backend $backend): void
@@ -160,7 +160,7 @@ class Response
         }, []);
     }
 
-    private function normalizeHeader($header): string 
+    private function normalizeHeader($header): string
     {
         return implode('-', array_map('ucfirst', explode('-', $header)));
     }
