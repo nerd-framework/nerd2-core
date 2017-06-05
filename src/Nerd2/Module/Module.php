@@ -27,7 +27,7 @@ function findPath(string $module): string
 {
     $tryFiles = [$module, "$module.php", "$module/index.php"];
     foreach ($tryFiles as $file) {
-        if (file_exists($file)) {
+        if (file_exists($file) && is_file($file)) {
             return $file;
         }
     }

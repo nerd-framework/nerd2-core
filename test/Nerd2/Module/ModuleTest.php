@@ -17,11 +17,16 @@ class ModuleTest extends TestCase
 
     public function testModulesAreSame()
     {
-        $GLOBALS['counter'] = 0;
-
         $module1 = module("../../fixture/module1");
         $module2 = module("../../fixture/module2");
 
         $this->assertSame($module1->func, $module2->func);
+    }
+
+    public function testModulesUsingIndex()
+    {
+        $module3 = module("../../fixture/module3");
+
+        $this->assertEquals('abc', $module3->abc);
     }
 }
