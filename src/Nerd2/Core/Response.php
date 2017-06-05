@@ -91,6 +91,11 @@ class Response
         511 => "Network Authentication Required" // [RFC6585]
     ];
 
+    public function render($template, array $args = []): void
+    {
+        $this->body = ($this->context->services['render'])($template, $args);
+    }
+
     public function sendTo(Backend $backend): void
     {
         $this->normalizeHeaders();
