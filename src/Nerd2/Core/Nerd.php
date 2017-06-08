@@ -11,16 +11,37 @@ class Nerd
 {
     private $middleware;
     private $config;
+    private $services;
 
-    public function __construct(array $middleware = [], array $initializers = [], array $config = [])
+    public function __construct(array $middleware = [], array $services = [], array $config = [])
     {
         $this->middleware = $middleware;
         $this->config = $config;
+        $this->services = [];
+
+        $this->loadServices($services);
     }
 
-    private function setting($path, $default = null)
+    private function loadServices(array $services): void
     {
-        $parts = explode('.', $key);
+        array_walk($services, function (callable $service) {
+            $service($this);
+        });
+    }
+
+    public function registerService(string $name, Closure $service): void
+    {
+        $this->services[$name] = $service;
+    }
+
+    public function getService(string $name)
+    {
+        return $this->services[$name];
+    }
+
+    public function getSetting($path, $default = null)
+    {
+        $parts = explode('.', $path);
         return array_reduce($parts, function ($acc, $part) {
             return (!is_null($acc) && array_key_exists($part, $acc)) ? $acc[$part] : null;
         }, $this->config) ?: $default;
@@ -28,51 +49,33 @@ class Nerd
 
     public function run(): void
     {
-        $request = Request::capture();
-        $backend = BrowserBackend::getInstance();
+        $request = request();
+        $response = response();
 
-        $response = $this->handle($request);
-        $response->sendTo($backend);
+        $this->proceed($request, $response);
+
+        $response->prepare($request);
+        $response->sendTo(browser());
     }
 
-    public static function init(Closure $init): void
+    public function proceed(Request $request, Response $response): void
     {
-        $request = Request::capture();
-        $backend = BrowserBackend::getInstance();
-
-        $app = new self();
-
-        $init($app);
-
-        $app->handle($request, $backend);
-    }
-
-    public function use(callable $middleware): void
-    {
-        $this->middleware[] = $middleware;
-    }
-
-    public function handle(Request $request, Backend $backend): void
-    {
-        $context = new Context($request, $this);
+        $context = new Context($request, $response, $this);
 
         try {
             $this->runMiddleware($context);
         } catch (HttpException $e) {
-            $context->response->responseCode = $e->responseCode;
-            $context->response->body = $e->body;
+            $context->getResponse()->setResponseCode($e->getResponseCode());
+            $context->getResponse()->setBody($e->getBody());
         } catch (Exception | NerdException $e) {
-            $context->response->responseCode = 500;
-            error_log($e);
+            $context->getResponse()->setResponseCode(500);
         }
-
-        $this->sendToClient($context, $backend);
     }
 
     private function runMiddleware(Context $context): void
     {
         $defaultMiddleware = function () use ($context) {
-            $context->response->responseCode = 404;
+            $context->getResponse()->setResponseCode(404);
         };
 
         $middleware = $this->middleware;
@@ -91,10 +94,5 @@ class Nerd
         if (strlen($side) > 0) {
             throw new NerdException("Side-effect body output detected");
         }
-    }
-
-    private function sendToClient(Context $context, Backend $backend): void
-    {
-        $context->response->sendTo($backend);
     }
 }

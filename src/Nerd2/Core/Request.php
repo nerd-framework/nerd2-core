@@ -4,10 +4,6 @@ namespace Nerd2\Core;
 
 class Request implements \JsonSerializable
 {
-    use \Nerd2\Core\Utils\AutoGetterSetter;
-
-    protected static $_autoGetters = ['method', 'path', 'headers', 'params', 'post', 'cookies', 'files'];
-
     private $method;
     private $path;
     private $headers;
@@ -27,7 +23,42 @@ class Request implements \JsonSerializable
         $this->files = $files;
     }
 
-    public function mergeParams(array $params): void
+    public function getMethod(): string
+    {
+        return $this->method;
+    }
+
+    public function getPath(): string
+    {
+        return $this->path;
+    }
+
+    public function getHeader(string $name): ?string
+    {
+        return $this->headers[$name] ?? null;
+    }
+
+    public function getParam(string $name): string
+    {
+        return $this->params[$name] ?? null;
+    }
+
+    public function getPost(string $name): string
+    {
+        return $this->post[$name] ?? null;
+    }
+
+    public function getCookie(string $name): string
+    {
+        return $this->cookies[$name] ?? null;
+    }
+
+    public function getFile(string $name): array
+    {
+        return $this->files[$name] ?? null;
+    }
+
+    public function addParams(array $params): void
     {
         $this->params = array_merge($this->params, $params);
     }

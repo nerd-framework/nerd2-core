@@ -11,10 +11,10 @@ class Router
     private $routes;
     private $routerPrefix;
 
-    public function __construct(string $routerPrefix = '', array $routes = [])
+    public function __construct(array $routes = [], string $routerPrefix = '')
     {
-        $this->routerPrefix = rtrim($routerPrefix, '/');
         $this->routes = $routes;
+        $this->routerPrefix = rtrim($routerPrefix, '/');
     }
 
     private function normalize(string $route): string

@@ -4,10 +4,6 @@ namespace Nerd2\Core\Exceptions;
 
 class HttpException extends \Exception
 {
-    use \Nerd2\Core\Utils\AutoGetterSetter;
-
-    protected static $_autoGetters = ['responseCode', 'body'];
-
     private $responseCode;
     private $body;
 
@@ -17,5 +13,15 @@ class HttpException extends \Exception
 
         $this->responseCode = $responseCode;
         $this->body = $body;
+    }
+
+    public function getResponseCode(): int
+    {
+        return $this->responseCode;
+    }
+
+    public function getBody(): string
+    {
+        return $this->body;
     }
 }

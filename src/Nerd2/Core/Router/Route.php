@@ -20,7 +20,7 @@ class Route
         $escapedRoute = $this->escapeSpecialSymbols($route);
         $convertedRoute = $this->convertParameters($escapedRoute);
         
-        $this->routeRegexp = "~^$convertedRoute\/?$~";
+        $this->routeRegexp = "~^$convertedRoute$~";
 
         $this->methods = $methods;
         $this->action = makeCascade($actions);
@@ -39,18 +39,20 @@ class Route
 
     public function __invoke(Context $context, Closure $next): void
     {
-        if (!empty($this->methods) && !in_array($context->request->method, $this->methods)) {
+        $request = $context->getRequest();
+
+        if (!empty($this->methods) && !in_array($request->getMethod(), $this->methods)) {
             $next();
             return;
         }
 
-        if (!preg_match($this->routeRegexp, $context->request->path, $match)) {
+        if (!preg_match($this->routeRegexp, $request->getPath(), $match)) {
             $next();
             return;
         }
 
         $params = $this->filterArgs(array_slice($match, 1));
-        $context->request->mergeParams($params);
+        $context->getRequest()->addParams($params);
 
         call_user_func($this->action, $context, $next);
     }

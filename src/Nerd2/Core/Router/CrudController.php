@@ -14,6 +14,11 @@ abstract class CrudController
         $this->routePrefix = $routePrefix;
     }
 
+    public function before(Context $context): void
+    {
+        //
+    }
+
     public function list(Context $context): void
     {
         $context->throw(501);
@@ -43,19 +48,24 @@ abstract class CrudController
     {
         $router = (new Router($this->routePrefix))
             ->get('/', function (Context $context) {
+                $this->before($context);
                 $this->list($context);
             })
             ->get('/:id', function (Context $context) {
-                $this->get($context, $context->request->params['id']);
+                $this->before($context);
+                $this->get($context, $context->getRequest()->getParam('id'));
             })
             ->post('/', function (Context $context) {
+                $this->before($context);
                 $this->post($context);
             })
             ->put('/:id', function (Context $context) {
-                $this->put($context, $context->request->params['id']);
+                $this->before($context);
+                $this->put($context, $context->getRequest()->getParam('id'));
             })
             ->delete('/:id', function (Context $context) {
-                $this->delete($context, $context->request->params['id']);
+                $this->before($context);
+                $this->delete($context, $context->getRequest()->getParam('id'));
             });
 
         $router($context, $next);

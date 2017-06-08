@@ -3,15 +3,34 @@
 namespace Nerd2\Core;
 
 use \Closure;
-use \Nerd2\Core\Context;
 
 function makeCascade(array $middleware): Closure
 {
     return function (Context $context, Closure $next) use ($middleware) {
-        array_reduce(array_reverse($middleware), function ($next, $prev) use ($context) {
+        call_user_func(array_reduce(array_reverse($middleware), function ($next, $prev) use ($context) {
             return function () use ($next, $prev, $context) {
                 $prev($context, $next);
             };
-        }, $next)();
+        }, $next));
     };
+}
+
+function get(string $key, array $array)
+{
+    return array_key_exists($key, $array) ? $array[$key] : null;
+}
+
+function request(): Request
+{
+    return Request::capture();
+}
+
+function response(): Response
+{
+    return Response::create();
+}
+
+function browser(): Backend
+{
+    return BrowserBackend::getInstance();
 }

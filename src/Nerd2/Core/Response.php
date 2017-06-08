@@ -4,11 +4,6 @@ namespace Nerd2\Core;
 
 class Response
 {
-    use \Nerd2\Core\Utils\AutoGetterSetter;
-
-    protected static $_autoGetters = ['responseCode', 'headers', 'cookies', 'responseCodes', 'template'];
-    protected static $_autoSetters = ['responseCode', 'body', 'redirect'];
-
     private const DEFAULT_RESPONSE_CODE = 200;
     private const REDIRECT_RESPONSE_CODE = 302;
 
@@ -17,13 +12,7 @@ class Response
     private $cookies = [];
     private $body = '';
     private $redirect = null;
-
-    private $context;
-
-    public function __construct(Context $context)
-    {
-        $this->context = $context;
-    }
+    private $meta = [];
 
     private $responseCodes = [
         // 1xx: Informational - Request received, continuing process
@@ -91,16 +80,66 @@ class Response
         511 => "Network Authentication Required" // [RFC6585]
     ];
 
-    public function render($template, array $args = []): void
+    public static function create(): Response
     {
-        $this->body = ($this->context->services->render)($template, $args);
+        return new self();
+    }
+
+    public function setHeader(string $name, string $value): Response
+    {
+        $normalizedName = $this->normalizeHeaderName($name);
+
+        if (!array_key_exists($normalizedName, $this->headers)) {
+            $this->headers[$normalizedName] = $value;
+        } else if (is_array($this->headers[$normalizedName])) {
+            $this->headers[$normalizedName][] = $value;
+        } else {
+            $this->headers[$normalizedName] = [$this->headers[$normalizedName], $value];
+        }
+
+        return $this;
+    }
+
+    public function setCookie(string $name, string $value): Response
+    {
+        $this->cookies[$name] = $value;
+
+        return $this;
+    }
+
+    public function setResponseCode(int $responseCode): Response
+    {
+        $this->responseCode = $responseCode;
+
+        return $this;
+    }
+
+    public function setBody($body): Response
+    {
+        $this->body = $body;
+
+        return $this;
+    }
+
+    public function setRedirect(string $url): Response
+    {
+        $this->redirect = $url;
+
+        return $this;
+    }
+
+    public function getResponseCode(): int
+    {
+        return $this->responseCode;
+    }
+
+    public function getBody(): string
+    {
+        return $this->body;
     }
 
     public function sendTo(Backend $backend): void
     {
-        $this->normalizeHeaders();
-        $this->prepareResponse();
-
         $backend->sendResponseCode($this->responseCode);
 
         foreach ($this->headers as $name => $value) {
@@ -111,16 +150,7 @@ class Response
             $backend->sendCookie($name, $value);
         }
 
-        $this->sendBody($backend);
-    }
-
-    private function sendBody(Backend $backend): void
-    {
-        if ($this->isJsonBody()) {
-            $backend->sendBody(json_encode($this->body));
-        } else {
-            $backend->sendBody($this->body);
-        }
+        $backend->sendBody($this->body);
     }
 
     private function isJsonBody(): bool
@@ -128,23 +158,28 @@ class Response
         return is_array($this->body) || $this->body instanceof \JsonSerializable;
     }
 
-    private function prepareResponse(): void
+    public function prepare(Request $request): void
     {
-        if ($this->context->request->method === 'HEAD') {
-            $this->body = '';
+        $this->normalizeHeaders();
+
+        if ($request->getMethod() === 'HEAD') {
+            $this->setBody('');
         }
 
         if (!is_null($this->redirect)) {
-            $this->responseCode = self::REDIRECT_RESPONSE_CODE;
-            $this->headers['Location'] = $this->redirect;
+            $this->setResponseCode(self::REDIRECT_RESPONSE_CODE)
+                 ->setHeader('Location', $this->redirect);
         }
 
-        if ($this->isJsonBody() && !isset($this->headers['Content-Type'])) {
-            $this->headers['Content-Type'] = 'application/json';
+        if ($this->isJsonBody()) {
+            $this->body = json_encode($this->body);
+            if (!$this->hasHeader('Content-Type')) {
+                $this->setHeader('Content-Type', 'application/json');
+            }
         }
 
         if ($this->isErrorResponse() && $this->hasNoBody()) {
-            $this->body = $this->responseCodes[$this->responseCode];
+            $this->setBody($this->responseCodes[$this->getResponseCode()]);
         }
     }
 
@@ -153,16 +188,19 @@ class Response
         $keys = array_keys($this->headers);
         $this->headers = array_reduce($keys, function ($acc, $key) {
             $headerValue = $this->headers[$key];
-            $acc[$this->normalizeHeader($key)] = is_array($headerValue)
-                ? implode(';', $headerValue)
-                : $headerValue;
+            $acc[$key] = $this->normalizeHeaderValue($headerValue);
             return $acc;
         }, []);
     }
 
-    private function normalizeHeader($header): string
+    private function normalizeHeaderName($header): string
     {
         return implode('-', array_map('ucfirst', explode('-', $header)));
+    }
+
+    private function normalizeHeaderValue($value): string
+    {
+        return is_array($value) ? implode(';', $value) : $value;
     }
 
     public function hasHeader($name): bool
