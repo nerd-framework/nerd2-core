@@ -9,7 +9,31 @@ use \Nerd2\Core\Exceptions\HttpException;
 
 class Nerd
 {
-    private $middleware = [];
+    private $middleware;
+    private $config;
+
+    public function __construct(array $middleware = [], array $initializers = [], array $config = [])
+    {
+        $this->middleware = $middleware;
+        $this->config = $config;
+    }
+
+    private function setting($path, $default = null)
+    {
+        $parts = explode('.', $key);
+        return array_reduce($parts, function ($acc, $part) {
+            return (!is_null($acc) && array_key_exists($part, $acc)) ? $acc[$part] : null;
+        }, $this->config) ?: $default;
+    }
+
+    public function run(): void
+    {
+        $request = Request::capture();
+        $backend = BrowserBackend::getInstance();
+
+        $response = $this->handle($request);
+        $response->sendTo($backend);
+    }
 
     public static function init(Closure $init): void
     {
@@ -40,7 +64,7 @@ class Nerd
         } catch (Exception | NerdException $e) {
             $context->response->responseCode = 500;
             error_log($e);
-        } 
+        }
 
         $this->sendToClient($context, $backend);
     }
