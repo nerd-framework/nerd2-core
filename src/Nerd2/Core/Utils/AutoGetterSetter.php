@@ -62,7 +62,7 @@ trait AutoGetterSetter
 
     public function isSetterExists($setter): bool
     {
-        return method_exists($this, $getter);
+        return method_exists($this, $setter);
     }
 
     public function isInAutoGetters($name): bool

@@ -9,6 +9,8 @@ use \Nerd2\Core\Exceptions\HttpException;
 
 class Nerd
 {
+    private const SETTING_PATH_SEPARATOR = '.';
+
     private $middleware;
     private $config;
     private $services;
@@ -31,7 +33,16 @@ class Nerd
 
     public function registerService(string $name, Closure $service): void
     {
+        if ($this->hasService($name)) {
+            throw new NerdException("Service '$name' already exists");
+        }
+
         $this->services[$name] = $service;
+    }
+
+    public function hasService(string $name): bool
+    {
+        return array_key_exists($name, $this->services);
     }
 
     public function getService(string $name)
@@ -41,7 +52,7 @@ class Nerd
 
     public function getSetting($path, $default = null)
     {
-        $parts = explode('.', $path);
+        $parts = explode(self::SETTING_PATH_SEPARATOR, $path);
         return array_reduce($parts, function ($acc, $part) {
             return (!is_null($acc) && array_key_exists($part, $acc)) ? $acc[$part] : null;
         }, $this->config) ?: $default;
@@ -80,7 +91,7 @@ class Nerd
 
         $middleware = $this->middleware;
 
-        $cascade = makeCascade($middleware);
+        $cascade = cascade($middleware);
 
         $this->runSilently($cascade, $context, $defaultMiddleware);
     }

@@ -1,33 +1,35 @@
 {
-    "name": "nerd2/core",
-    "description": "Web Framework based on principle of middleware",
-    "type": "library",
-    "scripts": {
-        "test": "phpunit test/"
-    },
-    "authors": [
-        {
-            "name": "Roman Lakhtadyr",
-            "email": "roman.lakhtadyr@gmail.com"
-        }
-    ],
-    "minimum-stability": "dev",
-    "require": {},
-    "autoload": {
-        "files": [
-            "src/Nerd2/Core/helper.php",
-            "src/Nerd2/Module/Module.php"
-        ],
-        "psr-4": {
-            "": "src/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "": "test/"
-        }
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^6.3@dev"
+  "name": "nerd2/core",
+  "description": "Web Framework based on principle of middleware",
+  "type": "library",
+  "prefer-stable": true,
+  "scripts": {
+    "test": "phpunit test/"
+  },
+  "authors": [
+    {
+      "name": "Roman Lakhtadyr",
+      "email": "roman.lakhtadyr@gmail.com"
     }
+  ],
+  "minimum-stability": "dev",
+  "require": {
+    "nikic/php-parser": "^3.0"
+  },
+  "autoload": {
+    "files": [
+      "src/Nerd2/Core/helper.php"
+    ],
+    "psr-4": {
+      "": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "": "tests/"
+    }
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^6.3@dev"
+  }
 }

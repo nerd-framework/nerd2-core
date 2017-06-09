@@ -5,7 +5,7 @@ namespace Nerd2\Core\Router;
 use \Closure;
 use \Nerd2\Core\Context;
 use \Nerd2\Core\Exceptions\NerdException;
-use function \Nerd2\Core\makeCascade;
+use function \Nerd2\Core\cascade;
 
 class Route
 {
@@ -23,7 +23,7 @@ class Route
         $this->routeRegexp = "~^$convertedRoute$~";
 
         $this->methods = $methods;
-        $this->action = makeCascade($actions);
+        $this->action = cascade($actions);
     }
 
     private function checkRoute(string $route): void

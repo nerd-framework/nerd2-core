@@ -4,7 +4,7 @@ namespace Nerd2\Core\Router;
 
 use \Closure;
 use \Nerd2\Core\Context;
-use function \Nerd2\Core\makeCascade;
+use function \Nerd2\Core\cascade;
 
 class Router
 {
@@ -54,7 +54,7 @@ class Router
 
     public function __invoke(Context $context, Closure $next): void
     {
-        $cascade = makeCascade($this->routes);
+        $cascade = cascade($this->routes);
         $cascade($context, $next);
     }
 }
