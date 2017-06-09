@@ -2,7 +2,9 @@
  * Dynamically Generated Class
  */
 
-class <?= $className ?><?= sizeof($interfaceList) ? ' implements ' : '' ?> <?= implode(', ', $interfaceList) ?>
+class <?= $className ?>
+<?= $parentClass ? ' extends ' . $parentClass . ' ' : '' ?>
+<?= sizeof($interfaceList) ? ' implements ' : '' ?> <?= implode(', ', $interfaceList) ?>
 {
     private $proxyHandler;
 
@@ -12,9 +14,10 @@ class <?= $className ?><?= sizeof($interfaceList) ? ' implements ' : '' ?> <?= i
     }
 
 <?php foreach ($methodList as $method): ?>
-	public function <?= $method['name'] ?>(<?= implode(', ', $method['args']) ?>)<?= $method['return'] ? ': ' . $method['return'] : '' ?> {
-		$args = func_get_args();
-		<?= $method['return'] != 'void' ? 'return' : '' ?> call_user_func($this->proxyHandler, '<?= $method['name'] ?>', $args);
-	}
+    public function <?= $method['name'] ?>(<?= implode(', ', $method['args']) ?>)<?= $method['return'] ? ': ' . $method['return'] : '' ?> {
+        $args = func_get_args();
+        <?= $method['return'] != 'void' ? 'return' : '' ?> call_user_func($this->proxyHandler, '<?= $method['name'] ?>', $args);
+    }
+
 <?php endforeach ?>
 }

@@ -14,13 +14,13 @@ class ClassProxyTest extends TestCase
     public function setUp()
     {
         $this->generator = new ClassProxyGenerator(function (string $name, array $args) {
-                switch ($name) {
-                    case 'bar':
-                        return $args[0] + $args[1];
-                    default:
-                        echo $name;
-                }
-            }, [FooInterface::class]);
+            switch ($name) {
+                case 'bar':
+                    return $args[0] + $args[1];
+                default:
+                    echo $name;
+            }
+        }, [FooInterface::class]);
     }
 
     public function testProxy()
@@ -35,5 +35,20 @@ class ClassProxyTest extends TestCase
         $sum = $instance->bar(5, 10);
 
         $this->assertEquals(15, $sum);
+    }
+
+    public function testProxyHelloWorld()
+    {
+        $hw = new HelloWorld();
+        $proxy = ClassProxyGenerator::proxyObject($hw, function (string $name, array $args, \ReflectionMethod $method) use (&$proxy) {
+            $method->setAccessible(true);
+            echo "Before $name Call\n";
+            $result = $method->invokeArgs($proxy, $args);
+            echo "After $name Call\n";
+            return $result;
+        });
+
+        $this->assertEquals('Hello, Bill! Bye, Bill!', $hw->hello('Bill'));
+        $this->assertEquals('Hello, Bill! Bye, Bill!', $proxy->hello('Bill'));
     }
 }
