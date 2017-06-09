@@ -2,6 +2,8 @@
 
 namespace Nerd2\Proxy;
 
+use Closure;
+
 class ClassProxyGenerator
 {
     private static $lastProxyId = 0;
@@ -9,47 +11,74 @@ class ClassProxyGenerator
     private $proxyHandler;
     private $interfaces;
     private $className;
+    private $generatedCode;
 
-    public function __construct(ProxyHandler $proxyHandler, array $interfaces = [])
+    public function __construct(Closure $proxyHandler, array $interfaces = [])
     {
         $this->proxyHandler = $proxyHandler;
         $this->interfaces = $interfaces;
         $this->className = '__ProxyClass' . (self::$lastProxyId++);
 
-        $generator = new ClassGenerator();
-
-        $generatedCode = $generator->generate($this->className, $this->interfaces, $this->getAllMethods());
-
-        eval($generatedCode);
-
+        $this->generatedCode = $this->generateClassCode(
+            $this->className,
+            $this->interfaces,
+            $this->mergeAllInterfacesMethods()
+        );
     }
 
     public function newInstance()
     {
+        $this->evalGeneratedCode();
+
         return new $this->className($this->proxyHandler);
     }
 
-    private function getAllMethods(): array
+    public function generateClassCode(string $className, array $interfaceList, array $methodList): string
     {
-        return array_merge([], ...array_map([$this, 'getMethods'], $this->interfaces));
+        ob_start();
+        require(__DIR__ . DIRECTORY_SEPARATOR . 'class.php');
+        return ob_get_clean();
     }
 
-    private function getMethods(string $interface): array
+    public function evalGeneratedCode(): void
+    {
+        if (!class_exists($this->className)) {
+            eval($this->generatedCode);
+        }
+    }
+
+    private function mergeAllInterfacesMethods(): array
+    {
+        return array_merge([], ...array_map([$this, 'getInterfaceMethods'], $this->interfaces));
+    }
+
+    private function getInterfaceMethods(string $interface): array
     {
         $class = new \ReflectionClass($interface);
         return array_map(function (\ReflectionMethod $method) {
             $name = $method->getName();
-            $args = array_map([$this, 'renderParameter'], $method->getParameters());
-            $return = $method->hasReturnType() ? strval($method->getReturnType()) : '';
+            $args = $this->renderParameters($method);
+            $return = $this->renderReturnType($method);
             return compact('name', 'args', 'return');
         }, $class->getMethods());
     }
 
+    private function renderParameters(\ReflectionMethod $method): array
+    {
+        return array_map([$this, 'renderParameter'], $method->getParameters());
+    }
+
     private function renderParameter(\ReflectionParameter $parameter): string
     {
-        return ($parameter->hasType()
-            ? strval($parameter->getType()) . ' '
-            : ''
-        ) . '$' . $parameter->getName();
+        return $parameter->hasType()
+            ? "{$parameter->getType()} \${$parameter->getName()}"
+            : "\${$parameter->getName()}";
+    }
+
+    private function renderReturnType(\ReflectionMethod $method): string
+    {
+        return $method->hasReturnType()
+            ? "{$method->getReturnType()}"
+            : "";
     }
 }

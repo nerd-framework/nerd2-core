@@ -13,16 +13,14 @@ class ClassProxyTest extends TestCase
 
     public function setUp()
     {
-        $this->generator = new ClassProxyGenerator(new class implements ProxyHandler {
-            public function invoke(string $name, array $args) {
+        $this->generator = new ClassProxyGenerator(function (string $name, array $args) {
                 switch ($name) {
                     case 'bar':
                         return $args[0] + $args[1];
                     default:
                         echo $name;
                 }
-            }
-        }, [FooInterface::class]);
+            }, [FooInterface::class]);
     }
 
     public function testProxy()
