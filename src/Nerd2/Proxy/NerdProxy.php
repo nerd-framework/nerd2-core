@@ -4,7 +4,7 @@ namespace Nerd2\Proxy;
 
 use Closure;
 
-class ClassProxyGenerator
+class NerdProxy
 {
     private static $lastProxyId = 0;
 
@@ -12,7 +12,7 @@ class ClassProxyGenerator
     private $interfaces;
     private $parentClass;
     private $className;
-    private $generatedCode;
+    private $proxyClass;
 
     public function __construct(Closure $proxyHandler, array $interfaces = [], $parentClass = null)
     {
@@ -21,15 +21,22 @@ class ClassProxyGenerator
         $this->parentClass = $parentClass;
         $this->className = '__ProxyClass' . (self::$lastProxyId++);
 
-        $this->generatedCode = $this->generateClassCode(
+        $this->proxyClass = $this->makeClass(
             $this->className,
             $this->interfaces,
             $this->parentClass,
-            $this->mergeAllInterfacesMethods()
+            $this->mergeAllMethods()
         );
     }
 
-    public static function proxyObject($object, Closure $objectProxyHandler)
+    /**
+     * Generates proxy object for a given object.
+     *
+     * @param object $object
+     * @param Closure $objectProxyHandler
+     * @return object
+     */
+    public static function forObject($object, Closure $objectProxyHandler)
     {
         $interfaces = array_map(function (\ReflectionClass $interface) {
             return $interface->getName();
@@ -45,45 +52,40 @@ class ClassProxyGenerator
 
     public function newInstance()
     {
-        $this->evalGeneratedCode();
+        $this->evalClass();
 
         return new $this->className($this->proxyHandler);
     }
 
-    public function generateClassCode(
-        string $className,
-        array $interfaceList,
-        $parentClass,
-        array $methodList
-    ): string {
+    private function makeClass(string $className, array $interfaceList, $parentClass, array $methodList): string
+    {
         ob_start();
         require(__DIR__ . DIRECTORY_SEPARATOR . 'class.php');
         return ob_get_clean();
     }
 
-    public function evalGeneratedCode(): void
+    public function evalClass(): void
     {
         if (!class_exists($this->className)) {
-            eval($this->generatedCode);
+            eval($this->proxyClass);
         }
     }
 
-    private function mergeAllInterfacesMethods(): array
+    private function mergeAllMethods(): array
     {
         $parentClassMethods = is_null($this->parentClass)
             ? []
-            : $this->getInterfaceMethods($this->parentClass);
+            : $this->getClassMethods($this->parentClass);
 
         return array_merge(
-            [],
             $parentClassMethods,
-            ...array_map([$this, 'getInterfaceMethods'], $this->interfaces)
+            ...array_map([$this, 'getClassMethods'], $this->interfaces)
         );
     }
 
-    private function getInterfaceMethods(string $interface): array
+    private function getClassMethods(string $className): array
     {
-        $class = new \ReflectionClass($interface);
+        $class = new \ReflectionClass($className);
         return array_map(function (\ReflectionMethod $method) {
             $name = $method->getName();
             $args = $this->renderParameters($method);

@@ -7,13 +7,13 @@ use PHPUnit\Framework\TestCase;
 class ClassProxyTest extends TestCase
 {
     /**
-     * @var ClassProxyGenerator
+     * @var NerdProxy
      */
     private $generator;
 
     public function setUp()
     {
-        $this->generator = new ClassProxyGenerator(function (string $name, array $args) {
+        $this->generator = new NerdProxy(function (string $name, array $args) {
             switch ($name) {
                 case 'bar':
                     return $args[0] + $args[1];
@@ -40,7 +40,7 @@ class ClassProxyTest extends TestCase
     public function testProxyHelloWorld()
     {
         $hw = new HelloWorld();
-        $proxy = ClassProxyGenerator::proxyObject($hw, function (string $name, array $args, \ReflectionMethod $method) use (&$proxy) {
+        $proxy = NerdProxy::forObject($hw, function (string $name, array $args, \ReflectionMethod $method) use (&$proxy) {
             $method->setAccessible(true);
             echo "Before $name Call\n";
             $result = $method->invokeArgs($proxy, $args);
@@ -50,5 +50,7 @@ class ClassProxyTest extends TestCase
 
         $this->assertEquals('Hello, Bill! Bye, Bill!', $hw->hello('Bill'));
         $this->assertEquals('Hello, Bill! Bye, Bill!', $proxy->hello('Bill'));
+
+        $this->expectOutputString("Before hello Call\nBefore bye Call\nAfter bye Call\nAfter hello Call\n");
     }
 }
