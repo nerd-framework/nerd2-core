@@ -32,7 +32,7 @@ class Nerd
         });
     }
 
-    public function registerService(string $name, mixed $service): void
+    public function registerService(string $name, $service): void
     {
         if ($this->hasService($name)) {
             throw new NerdException("Service '$name' already exists");
@@ -46,7 +46,7 @@ class Nerd
         return array_key_exists($name, $this->services);
     }
 
-    public function getService(string $name): mixed
+    public function getService(string $name)
     {
         return $this->services[$name];
     }
