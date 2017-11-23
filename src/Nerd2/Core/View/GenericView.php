@@ -18,6 +18,10 @@ class GenericView
 
     private function render($__viewFile, array $params)
     {
+        if (!file_exists($__viewFile)) {
+            throw new \Exception("Template ${__viewFile} does not exist");
+        }
+
         extract($params);
         ob_start();
         require $__viewFile;
