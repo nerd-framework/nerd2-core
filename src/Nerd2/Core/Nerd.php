@@ -6,6 +6,7 @@ use \Closure;
 use \Exception;
 use \Nerd2\Core\Exceptions\NerdException;
 use \Nerd2\Core\Exceptions\HttpException;
+use Nerd2\Service\ServiceProvider;
 
 class Nerd
 {
@@ -26,8 +27,8 @@ class Nerd
 
     private function loadServices(array $services): void
     {
-        array_walk($services, function (callable $service) {
-            $service($this);
+        array_walk($services, function (ServiceProvider $serviceProvider) {
+            $serviceProvider->register($this);
         });
     }
 

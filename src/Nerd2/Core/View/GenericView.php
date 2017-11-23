@@ -2,10 +2,10 @@
 
 namespace Nerd2\Core\View;
 
-use Closure;
 use Nerd2\Core\Nerd;
+use Nerd2\Service\ServiceProvider;
 
-class GenericView
+class GenericView implements ServiceProvider
 {
     private $viewsPath;
     private $suffix;
@@ -33,7 +33,7 @@ class GenericView
         return $this->viewsPath . DIRECTORY_SEPARATOR . $template . $this->suffix;
     }
 
-    public function __invoke(Nerd $app): void
+    public function register(Nerd $app): void
     {
         $app->registerService('render', function (string $template, array $params = []): string {
             return $this->render($this->getFullTemplatePath($template), $params);
